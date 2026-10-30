@@ -12,6 +12,16 @@ focus) with a low-key notification — ignore it freely, or `:AmiChat` to respon
 It talks to ami only through the public extension API, so it's also a template for
 writing your own: see ami's [`docs/extensions.md`](https://github.com/moosch/ami.nvim/blob/main/docs/extensions.md).
 
+## Demo
+
+`:AmiNudge` from a source file, then open the chat panel to watch the 💡 suggestion
+land:
+
+![proactive suggestion demo](demos/proactive.gif)
+
+> Rendered from [`demos/proactive.tape`](demos/proactive.tape); see
+> [`demos/README.md`](demos/README.md) to (re)generate it (needs ami-chat.nvim too).
+
 ## Requirements
 
 - [ami.nvim](https://github.com/moosch/ami.nvim) (provides the extension API and
