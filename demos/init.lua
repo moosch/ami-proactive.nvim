@@ -37,7 +37,7 @@ end
 
 require("ami").setup({
   daemon_url = "http://127.0.0.1:8799", -- dedicated port so the demo never clashes
-  model = { endpoint = endpoint, model = os.getenv("AMI_CHAT_MODEL") or "deepseek-coder" },
+  model = { endpoint = endpoint, model = os.getenv("AMI_CHAT_MODEL") or "qwen3-coder" },
   extensions = exts,
   proactive = { enabled = true },
 })
