@@ -78,7 +78,7 @@ local function nudge(force)
   A.context.gather_async(buf, win, nil, nil, function(ctx)
     A.client.post_json("/nudge", {
       session_id = A.chat.session(),
-      model = A.chat.model(),
+      model = A.models.effective("proactive").model,
       context = ctx,
     }, function(ok, data)
       state.pending = false
@@ -134,6 +134,7 @@ return {
   -- Defaults; user overrides via ami.setup({ proactive = { ... } }) win.
   config = {
     enabled = false,
+    model = nil,          -- nil = inherit ami's default model slot (pick via :AmiModel)
     on_idle = true,       -- suggest after idle_ms of inactivity
     idle_ms = 20000,
     on_save = true,       -- suggest after writing a buffer
@@ -170,6 +171,16 @@ return {
 
   setup = function(api)
     A = api
+
+    -- Register a model slot so nudges can use a different (e.g. cheaper/faster)
+    -- model than chat; unset ⇒ ami's default model. Appears in :AmiModel.
+    api.models.register({
+      name = "proactive",
+      label = "Proactive nudges",
+      get = function() return api.config.model end,
+      set = function(m) api.config.model = m end,
+    })
+
     local grp = vim.api.nvim_create_augroup("AmiCustomProactive", { clear = true })
     vim.api.nvim_create_autocmd(
       { "CursorMoved", "CursorMovedI", "TextChanged", "TextChangedI", "InsertLeave" },
