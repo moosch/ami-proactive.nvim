@@ -44,6 +44,27 @@ local function first_line(s)
   return line
 end
 
+-- Deliver a suggestion to its destination(s). By default it appends the full text
+-- to the ami-chat transcript and fires a one-line vim.notify. Customise via config:
+--   add_to_chat = false          -- skip the transcript copy
+--   present = function(text, info)  -- route it anywhere (e.g. snacks); when set it
+--                                   -- replaces the default vim.notify. `info` has
+--                                   -- { first_line = <short one-line form> }.
+local function deliver(s)
+  local c = cfg()
+  if c.add_to_chat ~= false then
+    A.chat.add_proactive(s)
+  end
+  if type(c.present) == "function" then
+    local ok, err = pcall(c.present, s, { first_line = first_line(s) })
+    if not ok then
+      A.log.warn("proactive: present() errored — " .. tostring(err))
+    end
+  elseif c.notify then
+    A.notify("💡 " .. first_line(s))
+  end
+end
+
 --- Request a proactive suggestion. With force=true, bypasses the enabled flag and
 --- the rate limit (used by :AmiNudge).
 ---@param force boolean|nil
@@ -90,10 +111,7 @@ local function nudge(force)
       if s and vim.trim(s) ~= "" then
         state.last_text = s
         A.log.info("nudge: suggestion offered")
-        A.chat.add_proactive(s)
-        if cfg().notify then
-          A.notify("💡 " .. first_line(s))
-        end
+        deliver(s)
       else
         A.log.debug("nudge: no suggestion")
       end
@@ -140,7 +158,13 @@ return {
     on_save = true,       -- suggest after writing a buffer
     min_interval_s = 180, -- rate limit: minimum seconds between suggestions
     require_normal_mode = true, -- don't interrupt while typing in insert mode
-    notify = true,        -- low-key notification when a suggestion arrives
+    -- Delivery (where a suggestion goes):
+    add_to_chat = true,   -- append the full suggestion to the ami-chat transcript
+    notify = true,        -- low-key vim.notify with a one-line form (default sink)
+    present = nil,         -- function(text, info) to route the nudge anywhere (e.g.
+                          -- snacks). When set it REPLACES the default vim.notify;
+                          -- info = { first_line = <short one-line form> }. Combine
+                          -- with add_to_chat = false to send only to your sink.
   },
 
   commands = {

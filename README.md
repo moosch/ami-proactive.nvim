@@ -74,7 +74,38 @@ defaults above):
 | `on_save` | `true` | suggest just after writing a buffer |
 | `min_interval_s` | `180` | minimum seconds between suggestions (rate limit) |
 | `require_normal_mode` | `true` | don't interrupt while you're in insert mode |
-| `notify` | `true` | low-key notification when a suggestion arrives |
+| `model` | `nil` | model for nudges; `nil` = ami's default (pick via `:AmiModel proactive`) |
+| `add_to_chat` | `true` | append the full suggestion to the ami-chat transcript |
+| `notify` | `true` | low-key `vim.notify` (one-line) when a suggestion arrives |
+| `present` | `nil` | function to route the nudge anywhere; see below |
+
+## Where nudges go
+
+By default a suggestion is **appended to the ami-chat transcript** and a one-line
+`vim.notify` is fired. (If you use [snacks.nvim](https://github.com/folke/snacks.nvim)
+with its notifier enabled as your `vim.notify`, that one-liner already shows as a
+snacks notification.)
+
+To take full control of the notification, set `present` — a
+`function(text, info)` that receives the full suggestion (`info.first_line` is a
+short, truncated form). When set, it **replaces** the default `vim.notify` (the
+transcript copy is still controlled by `add_to_chat`).
+
+Route nudges to a snacks notification:
+
+```lua
+proactive = {
+  enabled = true,
+  add_to_chat = false,  -- optional: send only to snacks, skip the chat transcript
+  present = function(text, info)
+    require("snacks").notify(text, { title = "ami 💡 " .. info.first_line, level = "info" })
+  end,
+}
+```
+
+Or drop them into the snacks picker / a scratch buffer / anywhere — `present` just
+hands you the text. A failing `present` is caught and logged, so a typo won't break
+a chat turn.
 
 ## License
 
