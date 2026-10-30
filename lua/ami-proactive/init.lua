@@ -44,6 +44,19 @@ local function first_line(s)
   return line
 end
 
+-- The proactive-suggestion system prompt. Easy to stay silent: an interruption
+-- that isn't worth it is worse than none.
+local NUDGE_SYSTEM = [[You are a pair programmer glancing over the user's shoulder while they work. Unprompted, offer AT MOST ONE brief suggestion or question (one or two sentences) about the current code or context — a likely bug, a simpler approach, a missed edge case, or a clarity/naming nit. Be specific to what you actually see.
+
+This is an interruption, so the bar is high: if nothing is genuinely worth saying right now, reply with exactly NO_SUGGESTION and nothing else. No greetings, no preamble, no lists, no code blocks. You advise only; never claim to have changed anything.]]
+
+local function nudge_system(block)
+  if not block or vim.trim(block) == "" then
+    return NUDGE_SYSTEM
+  end
+  return NUDGE_SYSTEM .. "\n\n# Current Context\n\n" .. block
+end
+
 -- Deliver a suggestion to its destination(s). By default it appends the full text
 -- to the ami-chat transcript and fires a one-line vim.notify. Customise via config:
 --   add_to_chat = false          -- skip the transcript copy
@@ -97,25 +110,40 @@ local function nudge(force)
   A.chat.set_source(buf, win)
 
   A.context.gather_async(buf, win, nil, nil, function(ctx)
-    A.client.post_json("/nudge", {
-      session_id = A.chat.session(),
-      model = A.models.effective("proactive").model,
-      context = ctx,
-    }, function(ok, data)
-      state.pending = false
-      if not ok then
-        A.log.debug("nudge: " .. tostring(data))
-        return
-      end
-      local s = type(data) == "table" and data.suggestion or nil
-      if s and vim.trim(s) ~= "" then
-        state.last_text = s
-        A.log.info("nudge: suggestion offered")
-        deliver(s)
-      else
-        A.log.debug("nudge: no suggestion")
-      end
-    end, { timeout_s = 90 })
+    local budget = (require("ami.config").options.context or {}).token_budget or 8000
+    local eff = A.models.effective("proactive")
+    local messages = { { role = "system", content = nudge_system(A.context.assemble(ctx, budget)) } }
+    local h = A.resolve("history")
+    if h and h.messages then
+      vim.list_extend(messages, h.messages(A.chat.session()))
+    end
+    messages[#messages + 1] = {
+      role = "user",
+      content = "(Proactively review the current context. Offer one brief, optional suggestion, or reply NO_SUGGESTION.)",
+    }
+
+    local reply = {}
+    A.client.stream_chat(eff.endpoint, { model = eff.model, messages = messages }, {
+      on_token = function(c) reply[#reply + 1] = c end,
+      on_done = function()
+        state.pending = false
+        local s = vim.trim(table.concat(reply))
+        if s == "NO_SUGGESTION" then
+          s = ""
+        end
+        if s ~= "" then
+          state.last_text = s
+          A.log.info("nudge: suggestion offered")
+          deliver(s)
+        else
+          A.log.debug("nudge: no suggestion")
+        end
+      end,
+      on_error = function(e)
+        state.pending = false
+        A.log.debug("nudge: " .. tostring(e))
+      end,
+    })
   end)
 end
 
