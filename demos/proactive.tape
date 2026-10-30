@@ -1,4 +1,4 @@
-# ami-custom-proactive — an unsolicited suggestion (nudge)
+# ami-proactive — an unsolicited suggestion (nudge)
 #
 # Record with:  vhs demos/proactive.tape
 # Needs `vhs` + a running LM Studio, ami core, and ami-chat.nvim checked out next to

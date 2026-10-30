@@ -1,4 +1,4 @@
--- Minimal Neovim config for recording the ami-custom-proactive demo with VHS.
+-- Minimal Neovim config for recording the ami-proactive demo with VHS.
 --   nvim -u demos/init.lua <file>
 --
 -- Proactive suggestions land in the chat transcript, so this demo also needs
@@ -28,7 +28,7 @@ vim.o.swapfile = false
 
 local endpoint = os.getenv("AMI_ENDPOINT") or "http://localhost:1234/v1"
 local exts = {}
-for _, m in ipairs({ "ami-chat", "ami-custom-proactive" }) do
+for _, m in ipairs({ "ami-chat", "ami-proactive" }) do
   local ok, e = pcall(require, m)
   if ok then
     exts[#exts + 1] = e

@@ -1,11 +1,11 @@
--- ami-custom-proactive: proactive suggestions for ami, as a standalone extension.
+-- ami-proactive: proactive suggestions for ami, as a standalone extension.
 --
 -- This is the reference external ami extension — it lives in its own Neovim plugin
 -- repo and plugs into ami purely through the extension API. Install it alongside
 -- ami and register it:
 --
 --   require("ami").setup({
---     extensions = { require("ami-custom-proactive") },
+--     extensions = { require("ami-proactive") },
 --     -- optional config (defaults shown in `config` below):
 --     -- proactive = { enabled = true, idle_ms = 20000, on_save = true },
 --   })
@@ -205,7 +205,7 @@ return {
       set = function(m) api.config.model = m end,
     })
 
-    local grp = vim.api.nvim_create_augroup("AmiCustomProactive", { clear = true })
+    local grp = vim.api.nvim_create_augroup("AmiProactive", { clear = true })
     vim.api.nvim_create_autocmd(
       { "CursorMoved", "CursorMovedI", "TextChanged", "TextChangedI", "InsertLeave" },
       { group = grp, callback = reset_idle }

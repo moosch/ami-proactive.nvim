@@ -1,4 +1,4 @@
-# ami-custom-proactive.nvim
+# ami-proactive.nvim
 
 Proactive suggestions for [ami](https://github.com/moosch/ami.nvim), packaged as a
 standalone **extension** — the reference example of an ami extension living in its
@@ -35,11 +35,11 @@ register it in ami's `setup()`:
 ```lua
 {
   "moosch/ami.nvim",
-  dependencies = { "moosch/ami-custom-proactive.nvim" },
+  dependencies = { "moosch/ami-proactive.nvim" },
   build = "make build",
   config = function()
     require("ami").setup({
-      extensions = { require("ami-custom-proactive") },
+      extensions = { require("ami-proactive") },
       -- enable it + tune (defaults shown):
       -- proactive = {
       --   enabled = false,
