@@ -36,7 +36,6 @@ register it in ami's `setup()`:
 {
   "moosch/ami.nvim",
   dependencies = { "moosch/ami-proactive.nvim" },
-  build = "make build",
   config = function()
     require("ami").setup({
       extensions = { require("ami-proactive") },
