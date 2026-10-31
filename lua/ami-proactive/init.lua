@@ -233,6 +233,16 @@ return {
       set = function(m) api.config.model = m end,
     })
 
+    api.health(function(report)
+      local c = cfg()
+      report.info("enabled: " .. tostring(c.enabled) .. " (on_idle=" .. tostring(c.on_idle)
+        .. ", on_save=" .. tostring(c.on_save) .. ")")
+      report.info("nudge model: " .. tostring(api.models.effective("proactive").model))
+      if c.add_to_chat and not api.resolve("chat") then
+        report.warn("add_to_chat is on but no chat extension is loaded — suggestions have nowhere to land")
+      end
+    end)
+
     local grp = vim.api.nvim_create_augroup("AmiProactive", { clear = true })
     vim.api.nvim_create_autocmd(
       { "CursorMoved", "CursorMovedI", "TextChanged", "TextChangedI", "InsertLeave" },
